@@ -164,6 +164,17 @@ bool ItemMonitor_Initialize() {
         return false;
     }
 
+    // 初始化 UI 系统
+    if (!Utils_InitializeUI()) {
+        MessageBoxA(nullptr,
+            "UI 系统初始化失败！\n\n"
+            "可能的原因：\n"
+            "1. Game.dll 加载失败\n"
+            "2. 游戏版本不匹配（需要 War3 1.24e）",
+            "错误", MB_OK | MB_ICONERROR);
+        return false;
+    }
+
     return true;
 }
 

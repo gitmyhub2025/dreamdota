@@ -61,19 +61,14 @@ bool Utils_InitializeUI() {
 //=============================================================================
 
 void Utils_OutputToScreen(const char* text, float duration) {
-    // 延迟初始化 UI
-    static bool initialized = false;
-    if (!initialized) {
-        Utils_InitializeUI();
-        initialized = true;
-    }
-
-    if (!g_ppGameGlobalUI || !*g_ppGameGlobalUI || !g_GameUI_DisplayText) {
-        return;
+    if (!g_ppGameGlobalUI || !g_GameUI_DisplayText) {
+        return; // UI 未初始化
     }
 
     __try {
-        g_GameUI_DisplayText(*g_ppGameGlobalUI, 0, 0.0f, 0.0f, text, duration, -1);
+        if (*g_ppGameGlobalUI) {
+            g_GameUI_DisplayText(*g_ppGameGlobalUI, 0, 0.0f, 0.0f, text, duration, -1);
+        }
     }
     __except(EXCEPTION_EXECUTE_HANDLER) {
         // 忽略错误
