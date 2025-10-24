@@ -11,9 +11,9 @@ DWORD WINAPI MainThread(LPVOID lpParam) {
     // 等待游戏初始化完成
     Sleep(5000);
 
-    // 初始化物品监控系统
+    // Initialize item monitor system
     if (!ItemMonitor_Initialize()) {
-        MessageBoxA(nullptr, "ItemRuneDisplay 初始化失败！", "错误", MB_OK | MB_ICONERROR);
+        MessageBoxA(nullptr, "ItemRuneDisplay initialization failed!", "Error", MB_OK | MB_ICONERROR);
         return 1;
     }
 

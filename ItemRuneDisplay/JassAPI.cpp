@@ -53,15 +53,15 @@ static GetWidgetLife_t g_GetWidgetLife = nullptr;
 //=============================================================================
 
 bool Jass_Initialize() {
-    // 获取 Game.dll
+    // Get Game.dll
     g_hGameDll = GetModuleHandleA("Game.dll");
     if (!g_hGameDll) {
         MessageBoxA(nullptr,
-            "无法找到 Game.dll!\n\n"
-            "请确保：\n"
-            "1. 在游戏中运行\n"
-            "2. 游戏版本为 War3 1.24e (1.24.4.6387)",
-            "错误", MB_OK | MB_ICONERROR);
+            "Cannot find Game.dll!\n\n"
+            "Make sure:\n"
+            "1. Running inside War3 game\n"
+            "2. Game version is War3 1.24e (1.24.4.6387)",
+            "Error", MB_OK | MB_ICONERROR);
         return false;
     }
 

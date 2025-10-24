@@ -109,10 +109,10 @@ void ProcessItem(uint32_t itemHandle) {
         return;
     }
 
-    // 显示神符信息
+    // Display powerup info
     char message[512];
     sprintf_s(message, sizeof(message),
-        "|cffffcc00[神符生成]|r %s @ (%.0f, %.0f)",
+        "|cffffcc00[Powerup]|r %s @ (%.0f, %.0f)",
         Utils_IntegerIdToString(data.typeId).c_str(), data.x, data.y);
 
     Utils_OutputToScreen(message, 10.0f);
@@ -165,14 +165,14 @@ bool ItemMonitor_Initialize() {
         return false;
     }
 
-    // 初始化 UI 系统
+    // Initialize UI system
     if (!Utils_InitializeUI()) {
         MessageBoxA(nullptr,
-            "UI 系统初始化失败！\n\n"
-            "可能的原因：\n"
-            "1. Game.dll 加载失败\n"
-            "2. 游戏版本不匹配（需要 War3 1.24e）",
-            "错误", MB_OK | MB_ICONERROR);
+            "UI system initialization failed!\n\n"
+            "Possible reasons:\n"
+            "1. Game.dll not loaded\n"
+            "2. Wrong War3 version (need 1.24e)",
+            "Error", MB_OK | MB_ICONERROR);
         return false;
     }
 
@@ -186,23 +186,23 @@ void ItemMonitor_Start() {
     g_bInGame = true;  // 标记进入游戏
     g_DisplayedItems.clear();
 
-    // 创建定时器队列
+    // Create timer queue
     g_hTimerQueue = CreateTimerQueue();
     if (!g_hTimerQueue) {
-        Utils_OutputToScreen("|cffff0000启动监控失败！|r");
+        Utils_OutputToScreen("|cffff0000Monitor start failed!|r");
         return;
     }
 
-    // 创建定时器 - 每1秒执行一次
+    // Create timer - runs every 1 second
     if (!CreateTimerQueueTimer(&g_hTimer, g_hTimerQueue, TimerCallback,
         nullptr, 1000, 1000, WT_EXECUTEDEFAULT)) {
         DeleteTimerQueue(g_hTimerQueue);
         g_hTimerQueue = nullptr;
-        Utils_OutputToScreen("|cffff0000创建定时器失败！|r");
+        Utils_OutputToScreen("|cffff0000Timer creation failed!|r");
         return;
     }
 
-    Utils_OutputToScreen("|cff00ff00ItemRuneDisplay 已启动！War3 1.24e (6387)|r", 5.0f);
+    Utils_OutputToScreen("|cff00ff00ItemRuneDisplay started! War3 1.24e (6387)|r", 5.0f);
 }
 
 void ItemMonitor_Stop() {
@@ -223,7 +223,7 @@ void ItemMonitor_Stop() {
 
     g_DisplayedItems.clear();
 
-    Utils_OutputToScreen("|cffffff00ItemRuneDisplay 已停止。|r", 3.0f);
+    Utils_OutputToScreen("|cffffff00ItemRuneDisplay stopped.|r", 3.0f);
 }
 
 void ItemMonitor_Cleanup() {
