@@ -22,12 +22,26 @@ cd ItemRuneDisplay
 
 ## 🔨 编译 DLL
 
-### 方法 1: 使用批处理（Windows）
+### ⭐ 方法 1: 使用 Visual Studio（最简单）
+```
+1. 双击打开 ItemRuneDisplay.sln
+2. 选择 Release | Win32
+3. 按 F7 或 菜单 → 生成 → 生成解决方案
+4. 输出: bin\Release\ItemRuneDisplay.dll
+```
+
+### 方法 2: 使用批处理（Windows）
 ```batch
 build.bat
 ```
 
-### 方法 2: 手动编译
+### 方法 3: 使用 MSBuild 命令行
+```batch
+# 打开 Developer Command Prompt for VS
+msbuild ItemRuneDisplay.sln /p:Configuration=Release /p:Platform=Win32
+```
+
+### 方法 4: 手动编译
 ```batch
 # 设置 Visual Studio 环境
 "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
@@ -36,7 +50,9 @@ build.bat
 cl.exe /LD /MT /O2 /EHsc /Fe:ItemRuneDisplay.dll ItemRuneDisplay_6387.cpp /link kernel32.lib user32.lib
 ```
 
-输出文件：`ItemRuneDisplay.dll`
+**详细编译指南**: 参考 `BUILD.md`
+
+输出文件：`ItemRuneDisplay.dll` (约 50KB)
 
 ## 🎮 使用方法
 
@@ -116,12 +132,16 @@ OutputToScreen(message, 10.0f);  // 持续秒数
 
 | 文件 | 用途 |
 |------|------|
-| `ItemRuneDisplay_6387.cpp` | **主要文件** - War3 1.24e DLL 源码 |
+| `ItemRuneDisplay.sln` | **VS 解决方案** - 双击即可打开 |
+| `ItemRuneDisplay.vcxproj` | **VS 项目文件** - 项目配置 |
+| `ItemRuneDisplay_6387.cpp` | **主要源码** - War3 1.24e DLL |
 | `ItemRuneMonitor.j` | JASS 脚本版本（备选方案） |
+| `BUILD.md` | 详细编译指南 ⭐ |
 | `README.md` | 完整项目文档 |
 | `USAGE.md` | 详细使用教程 |
 | `PROJECT_SUMMARY.md` | 技术细节和学习要点 |
-| `build.bat` | Windows 编译脚本 |
+| `build.bat` | Windows 批处理编译脚本 |
+| `exports.def` | DLL 导出定义 |
 
 ## 🔗 核心技术
 
