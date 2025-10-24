@@ -5,6 +5,7 @@
 
 #include "Utils.h"
 #include "JassAPI.h"
+#include "ItemMonitor.h"
 
 //=============================================================================
 // UI 显示函数类型
@@ -18,7 +19,7 @@ typedef void (__fastcall *GameUI_DisplayText_t)(void* ui, int, float x, float y,
 //=============================================================================
 
 namespace UIOffsets {
-    const DWORD GameGlobalUI        = 0x00AB65F0;  // 全局 UI 对象指针
+    const DWORD GameGlobalUI        = 0x00ACBDD8;  // 全局 UI 对象指针 (修正)
     const DWORD GameUI_DisplayText  = 0x002F9980;  // UI 文本显示函数
 }
 
@@ -61,8 +62,9 @@ bool Utils_InitializeUI() {
 //=============================================================================
 
 void Utils_OutputToScreen(const char* text, float duration) {
-    if (!g_ppGameGlobalUI || !g_GameUI_DisplayText) {
-        return; // UI 未初始化
+    // 检查游戏状态和 UI 初始化
+    if (!ItemMonitor_IsInGame() || !g_ppGameGlobalUI || !g_GameUI_DisplayText) {
+        return;
     }
 
     __try {

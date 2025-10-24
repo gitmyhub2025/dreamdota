@@ -19,4 +19,7 @@ void ItemMonitor_Stop();
 // 清理资源
 void ItemMonitor_Cleanup();
 
+// 检查是否在游戏中
+bool ItemMonitor_IsInGame();
+
 #endif // ITEM_MONITOR_H

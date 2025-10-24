@@ -13,6 +13,7 @@
 //=============================================================================
 
 static bool g_bRunning = false;
+static bool g_bInGame = false;  // 游戏状态标志
 static HANDLE g_hTimerQueue = nullptr;
 static HANDLE g_hTimer = nullptr;
 static std::set<uint32_t> g_DisplayedItems;
@@ -182,6 +183,7 @@ void ItemMonitor_Start() {
     if (g_bRunning) return;
 
     g_bRunning = true;
+    g_bInGame = true;  // 标记进入游戏
     g_DisplayedItems.clear();
 
     // 创建定时器队列
@@ -207,6 +209,7 @@ void ItemMonitor_Stop() {
     if (!g_bRunning) return;
 
     g_bRunning = false;
+    g_bInGame = false;  // 标记离开游戏
 
     if (g_hTimer && g_hTimerQueue) {
         DeleteTimerQueueTimer(g_hTimerQueue, g_hTimer, INVALID_HANDLE_VALUE);
@@ -225,4 +228,8 @@ void ItemMonitor_Stop() {
 
 void ItemMonitor_Cleanup() {
     ItemMonitor_Stop();
+}
+
+bool ItemMonitor_IsInGame() {
+    return g_bInGame;
 }
