@@ -40,60 +40,84 @@ const DWORD OFFSET_ItemHashTable = 0x00AB4F84;
 // 物品枚举和处理
 //=============================================================================
 
+// 物品数据结构（用于在 SEH 保护区域和 C++ 对象区域之间传递数据）
+struct ItemData {
+    uint32_t typeId;
+    float life;
+    float x;
+    float y;
+    bool isOwned;
+    bool isPowerup;
+    bool valid;
+};
+
+// 安全获取物品数据（使用 SEH 保护，无 C++ 对象）
+static bool GetItemDataSafe(uint32_t itemHandle, ItemData* pData) {
+    __try {
+        pData->typeId = Jass_GetItemTypeId(itemHandle);
+        if (pData->typeId == 0) {
+            pData->valid = false;
+            return false;
+        }
+
+        pData->life = Jass_GetWidgetLife(itemHandle);
+        if (pData->life <= 0.0f) {
+            pData->valid = false;
+            return false;
+        }
+
+        pData->isOwned = Jass_IsItemOwned(itemHandle);
+        if (pData->isOwned) {
+            pData->valid = false;
+            return false;
+        }
+
+        pData->isPowerup = Jass_IsItemPowerup(itemHandle);
+        if (!pData->isPowerup) {
+            pData->valid = false;
+            return false;
+        }
+
+        pData->x = Jass_GetItemX(itemHandle);
+        pData->y = Jass_GetItemY(itemHandle);
+        pData->valid = true;
+        return true;
+    }
+    __except(EXCEPTION_EXECUTE_HANDLER) {
+        pData->valid = false;
+        return false;
+    }
+}
+
 void ProcessItem(uint32_t itemHandle) {
     // 检查是否已显示
     if (g_DisplayedItems.count(itemHandle)) {
         return;
     }
 
-    __try {
-        // 获取物品类型ID
-        uint32_t typeId = Jass_GetItemTypeId(itemHandle);
-        if (typeId == 0) {
-            return;
-        }
-
-        // 检查物品是否存活
-        float life = Jass_GetWidgetLife(itemHandle);
-        if (life <= 0.0f) {
-            return;
-        }
-
-        // 检查是否被拾取
-        bool isOwned = Jass_IsItemOwned(itemHandle);
-        if (isOwned) {
-            return;
-        }
-
-        // 检查是否为神符
-        bool isPowerup = Jass_IsItemPowerup(itemHandle);
-        if (isPowerup) {
-            // 过滤无用道具（从 DreamDota RuneNotify.cpp）
-            if (typeId == 'I0KK' || typeId == 'I0HM' ||
-                typeId == 'KK0I' || typeId == 'MH0I') {
-                g_DisplayedItems.insert(itemHandle);
-                return;
-            }
-
-            // 获取位置
-            float x = Jass_GetItemX(itemHandle);
-            float y = Jass_GetItemY(itemHandle);
-
-            // 显示神符信息
-            char message[512];
-            sprintf_s(message, sizeof(message),
-                "|cffffcc00[神符生成]|r %s @ (%.0f, %.0f)",
-                Utils_IntegerIdToString(typeId).c_str(), x, y);
-
-            Utils_OutputToScreen(message, 10.0f);
-
-            // 标记为已显示
-            g_DisplayedItems.insert(itemHandle);
-        }
+    // 安全获取物品数据
+    ItemData data = {0};
+    if (!GetItemDataSafe(itemHandle, &data) || !data.valid) {
+        return;
     }
-    __except(EXCEPTION_EXECUTE_HANDLER) {
-        // 忽略错误
+
+    // 过滤无用道具（从 DreamDota RuneNotify.cpp）
+    if (data.typeId == 'I0KK' || data.typeId == 'I0HM' ||
+        data.typeId == 'KK0I' || data.typeId == 'MH0I') {
+        g_DisplayedItems.insert(itemHandle);
+        return;
     }
+
+    // 显示神符信息
+    char message[512];
+    sprintf_s(message, sizeof(message),
+        "|cffffcc00[神符生成]|r %s @ (%.0f, %.0f)",
+        Utils_IntegerIdToString(data.typeId).c_str(), data.x, data.y);
+
+    Utils_OutputToScreen(message, 10.0f);
+
+    // 标记为已显示
+    g_DisplayedItems.insert(itemHandle);
 }
 
 void EnumerateAllItems() {
