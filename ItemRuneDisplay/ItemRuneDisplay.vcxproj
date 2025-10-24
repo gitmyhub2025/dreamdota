@@ -86,7 +86,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ItemRuneDisplay_6387.cpp" />
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="ItemMonitor_Impl.cpp" />
+    <ClCompile Include="JassAPI.cpp" />
+    <ClCompile Include="Utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ItemMonitor.h" />
+    <ClInclude Include="JassAPI.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />
@@ -94,7 +102,23 @@
     <None Include="USAGE.md" />
     <None Include="QUICK_START.md" />
     <None Include="PROJECT_SUMMARY.md" />
+    <None Include="BUILD.md" />
     <None Include="build.bat" />
+    <None Include="ItemRuneMonitor.j" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ItemRuneDisplay_6387.cpp">
+      <FileType>Document</FileType>
+    </Text>
+    <Text Include="ItemRuneDisplay_Full.cpp">
+      <FileType>Document</FileType>
+    </Text>
+    <Text Include="ItemMonitor.cpp">
+      <FileType>Document</FileType>
+    </Text>
+    <Text Include="main.cpp">
+      <FileType>Document</FileType>
+    </Text>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
