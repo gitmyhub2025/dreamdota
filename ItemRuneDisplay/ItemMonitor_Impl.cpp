@@ -122,10 +122,19 @@ void ProcessItem(uint32_t itemHandle) {
 }
 
 void EnumerateAllItems() {
+    // DISABLED: Hash table enumeration causes crashes
+    // The hash table offset (0xAB4F84) cannot be confirmed from dreamdota source
+    //
+    // Alternative solutions:
+    // 1. Use the JASS script version (ItemRuneMonitor.j) which uses EnumItemsInRect
+    // 2. Wait for future implementation using JASS API callbacks
+    //
+    // For now, this function does nothing to prevent crashes
+
+    /* Original implementation - DISABLED
     DWORD gameBase = Jass_GetGameBase();
     if (!gameBase) return;
 
-    // 获取物品哈希表
     ItemHashTable** ppItemHashTable = (ItemHashTable**)(gameBase + OFFSET_ItemHashTable);
     if (!ppItemHashTable || !*ppItemHashTable) {
         return;
@@ -136,7 +145,6 @@ void EnumerateAllItems() {
         return;
     }
 
-    // 遍历哈希表
     for (uint32_t i = 0; i < pHashTable->capacity; i++) {
         ItemHashNode* node = pHashTable->buckets[i];
         while (node) {
@@ -144,6 +152,7 @@ void EnumerateAllItems() {
             node = node->next;
         }
     }
+    */
 }
 
 //=============================================================================
