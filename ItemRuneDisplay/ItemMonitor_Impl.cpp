@@ -44,66 +44,88 @@ const DWORD INFO_Y       = 0x8C;  // y coordinate
 // 物品枚举和处理
 //=============================================================================
 
-// 直接从内存读取物品数据（基于 Python 实现）
-void ProcessItemObject(DWORD objPtr) {
-    // 检查是否已显示（使用对象指针作为唯一标识）
-    if (g_DisplayedItems.count(objPtr)) {
-        return;
-    }
+// POD structure for item data (no C++ objects)
+struct ItemObjectData {
+    uint32_t typeId;
+    float x;
+    float y;
+    float hp;
+    DWORD flags;
+    bool valid;
+};
 
+// Safe memory read with SEH (no C++ objects)
+static bool ReadItemObjectSafe(DWORD objPtr, ItemObjectData* pData) {
     __try {
         // Read flags (Python: flags = self.pm.read_int(ptr + 0x20))
-        DWORD flags = *(DWORD*)(objPtr + OBJ_FLAGS);
-        if ((flags & 1) != 0) {
-            return;  // Item is deleted
+        pData->flags = *(DWORD*)(objPtr + OBJ_FLAGS);
+        if ((pData->flags & 1) != 0) {
+            pData->valid = false;
+            return false;  // Item is deleted
         }
 
         // Read HP (Python: hp = self.pm.read_float(ptr + 0x58))
-        float hp = *(float*)(objPtr + OBJ_HP);
-        if (hp <= 0.0f) {
-            return;  // Item is dead
+        pData->hp = *(float*)(objPtr + OBJ_HP);
+        if (pData->hp <= 0.0f) {
+            pData->valid = false;
+            return false;  // Item is dead
         }
 
         // Read typeId (Python: id4 = self.pm.read_uint(ptr + 0x30))
-        uint32_t typeId = *(uint32_t*)(objPtr + OBJ_TYPEID);
-        if (typeId == 0) {
-            return;
-        }
-
-        // Check if it's a powerup (ITEM_TYPE_POWERUP = 2)
-        // We can check by typeId or use JASS function with handle if needed
-        // For now, assume items on ground are powerups we want to track
-
-        // Filter useless items (from DreamDota RuneNotify.cpp)
-        if (typeId == 'I0KK' || typeId == 'I0HM' ||
-            typeId == 'KK0I' || typeId == 'MH0I') {
-            g_DisplayedItems.insert(objPtr);
-            return;
+        pData->typeId = *(uint32_t*)(objPtr + OBJ_TYPEID);
+        if (pData->typeId == 0) {
+            pData->valid = false;
+            return false;
         }
 
         // Read position (Python: info + 0x88/0x8C)
         DWORD infoPtr = *(DWORD*)(objPtr + OBJ_INFO);
         if (infoPtr == 0) {
-            return;
+            pData->valid = false;
+            return false;
         }
 
-        float x = *(float*)(infoPtr + INFO_X);
-        float y = *(float*)(infoPtr + INFO_Y);
-
-        // Display powerup info
-        char message[512];
-        sprintf_s(message, sizeof(message),
-            "|cffffcc00[Powerup]|r %s @ (%.0f, %.0f)",
-            Utils_IntegerIdToString(typeId).c_str(), x, y);
-
-        Utils_OutputToScreen(message, 10.0f);
-
-        // Mark as displayed
-        g_DisplayedItems.insert(objPtr);
+        pData->x = *(float*)(infoPtr + INFO_X);
+        pData->y = *(float*)(infoPtr + INFO_Y);
+        pData->valid = true;
+        return true;
     }
     __except(EXCEPTION_EXECUTE_HANDLER) {
-        // Ignore errors silently
+        pData->valid = false;
+        return false;
     }
+}
+
+// Process item object (can use C++ objects safely)
+void ProcessItemObject(DWORD objPtr) {
+    // Check if already displayed
+    if (g_DisplayedItems.count(objPtr)) {
+        return;
+    }
+
+    // Read item data safely
+    ItemObjectData data = {0};
+    if (!ReadItemObjectSafe(objPtr, &data) || !data.valid) {
+        return;
+    }
+
+    // Filter useless items (from DreamDota RuneNotify.cpp)
+    if (data.typeId == 'I0KK' || data.typeId == 'I0HM' ||
+        data.typeId == 'KK0I' || data.typeId == 'MH0I') {
+        g_DisplayedItems.insert(objPtr);
+        return;
+    }
+
+    // Display powerup info
+    char message[512];
+    sprintf_s(message, sizeof(message),
+        "|cffffcc00[Powerup]|r %s @ (%.0f, %.0f)",
+        Utils_IntegerIdToString(data.typeId).c_str(), data.x, data.y);
+
+    Utils_OutputToScreen(message, 10.0f);
+
+    // Mark as displayed
+    g_DisplayedItems.insert(objPtr);
 }
 
 void EnumerateAllItems() {
