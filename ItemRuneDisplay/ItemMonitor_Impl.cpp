@@ -8,6 +8,7 @@
 #include "Utils.h"
 #include <set>
 #include <map>
+#include <memory>
 
 //=============================================================================
 // 全局变量
@@ -21,6 +22,9 @@ static std::set<uint32_t> g_DisplayedItems;
 
 // Store TextTag handles for each item (objPtr -> textTag handle)
 static std::map<DWORD, uint32_t> g_ItemTextTags;
+
+// Store JassString objects for each item (must stay alive with TextTag!)
+static std::map<DWORD, std::unique_ptr<JassString>> g_ItemJassStrings;
 
 //=============================================================================
 // 物品对象结构（从 Python 代码提取）
@@ -129,7 +133,7 @@ void ProcessItemObject(DWORD objPtr) {
     Utils_OutputToScreen(message, 10.0f);
 
     // Create TextTag at item position to display item ID
-    // Follow EXACT pattern from itemTracker reference code
+    // Use JassString structure like working reference code
     uint32_t textTag = Jass_CreateTextTag();
     if (textTag != 0) {
         // Get item ID string with color code
@@ -137,21 +141,17 @@ void ProcessItemObject(DWORD objPtr) {
         char textBuffer[64];
         sprintf_s(textBuffer, sizeof(textBuffer), "|cffffcc00%s|r", itemId.c_str());
 
-        // TEST: Skip SetTextTagText to see if empty TextTag displays
-        // This helps isolate whether the problem is with string parameter
+        // Create and store JassString (must stay alive with TextTag!)
+        g_ItemJassStrings[objPtr] = std::make_unique<JassString>(textBuffer);
 
-        // 1. Set visibility FIRST
+        // Follow reference code order exactly
+        float textSize = 0.046f;
+        Jass_SetTextTagText(textTag, g_ItemJassStrings[objPtr]->GetJassStr(), textSize);
+
         Jass_SetTextTagVisibility(textTag, true);
-
-        // 2. Unsuspend the TextTag
         Jass_SetTextTagSuspended(textTag, false);
 
-        // 3. Set position
-        Jass_SetTextTagPos(textTag, data.x, data.y, 100.0f);
-
-        // 4. Try setting text AFTER position (different order)
-        float textSize = 0.046f;
-        Jass_SetTextTagText(textTag, textBuffer, textSize);
+        Jass_SetTextTagPos(textTag, data.x, data.y, 10.0f);
 
         // Store TextTag handle for later cleanup
         g_ItemTextTags[objPtr] = textTag;
@@ -289,6 +289,7 @@ void ItemMonitor_Start() {
     g_bInGame = true;  // 标记进入游戏
     g_DisplayedItems.clear();
     g_ItemTextTags.clear();
+    g_ItemJassStrings.clear();
 
     // Create timer queue
     g_hTimerQueue = CreateTimerQueue();
@@ -325,8 +326,9 @@ void ItemMonitor_Stop() {
         g_hTimerQueue = nullptr;
     }
 
-    // Clean up all TextTags
+    // Clean up all TextTags and JassStrings
     g_ItemTextTags.clear();
+    g_ItemJassStrings.clear();
 
     g_DisplayedItems.clear();
 

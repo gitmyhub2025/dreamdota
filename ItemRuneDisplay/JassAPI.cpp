@@ -181,14 +181,10 @@ uint32_t Jass_CreateTextTag() {
     return g_CreateTextTag ? g_CreateTextTag() : 0;
 }
 
-void Jass_SetTextTagText(uint32_t textTag, const char* text, float height) {
-    if (g_SetTextTagText && textTag && text) {
-        // Store string persistently for this TextTag
-        // War3 reads the string pointer asynchronously
-        g_TextTagStrings[textTag] = text;
-
-        // Pass pointer to our persistent string storage
-        string jassText = (string)g_TextTagStrings[textTag].c_str();
+void Jass_SetTextTagText(uint32_t textTag, CJassString* jassStr, float height) {
+    if (g_SetTextTagText && textTag && jassStr) {
+        // Pass CJassString pointer directly - War3 expects this structure
+        string jassText = (string)jassStr;
         g_SetTextTagText(textTag, nullptr, jassText, &height);
     }
 }
