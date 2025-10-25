@@ -137,19 +137,21 @@ void ProcessItemObject(DWORD objPtr) {
         char textBuffer[64];
         sprintf_s(textBuffer, sizeof(textBuffer), "|cffffcc00%s|r", itemId.c_str());
 
-        // CRITICAL: itemTracker order: Text -> Visibility -> Pos
-        // 1. Set text FIRST
-        float textSize = 0.046f;
-        Jass_SetTextTagText(textTag, textBuffer, textSize);
+        // TEST: Skip SetTextTagText to see if empty TextTag displays
+        // This helps isolate whether the problem is with string parameter
 
-        // 2. Then set visibility
+        // 1. Set visibility FIRST
         Jass_SetTextTagVisibility(textTag, true);
 
-        // 3. CRITICAL: Unsuspend the TextTag (may be suspended by default!)
+        // 2. Unsuspend the TextTag
         Jass_SetTextTagSuspended(textTag, false);
 
-        // 4. Finally set position
-        Jass_SetTextTagPos(textTag, data.x, data.y, 10.0f);
+        // 3. Set position
+        Jass_SetTextTagPos(textTag, data.x, data.y, 100.0f);
+
+        // 4. Try setting text AFTER position (different order)
+        float textSize = 0.046f;
+        Jass_SetTextTagText(textTag, textBuffer, textSize);
 
         // Store TextTag handle for later cleanup
         g_ItemTextTags[objPtr] = textTag;
