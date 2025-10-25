@@ -30,17 +30,17 @@ typedef int integer;
 typedef DWORD handle;
 typedef DWORD string;
 
-// TextTag function types (from JassNatives.prototype.inc)
-// Note: JASS float parameters are passed as pointers!
-typedef handle (__fastcall *CreateTextTag_t)();
-typedef void (__fastcall *SetTextTagText_t)(handle textTag, void* dummy, string text, float* height);
-typedef void (__fastcall *SetTextTagPos_t)(handle textTag, void* dummy, float* x, float* y, float* zOffset);
-typedef void (__fastcall *SetTextTagColor_t)(handle textTag, void* dummy, integer r, integer g, integer b, integer a);
-typedef void (__fastcall *SetTextTagVisibility_t)(handle textTag, void* dummy, bool visible);
-typedef void (__fastcall *SetTextTagSuspended_t)(handle textTag, void* dummy, bool suspended);
-typedef void (__fastcall *SetTextTagPermanent_t)(handle textTag, void* dummy, bool permanent);
-typedef void (__fastcall *SetTextTagLifespan_t)(handle textTag, void* dummy, float* lifespan);
-typedef void (__fastcall *SetTextTagFadepoint_t)(handle textTag, void* dummy, float* fadepoint);
+// TextTag function types - CRITICAL: Use __cdecl like 1.27 reference!
+// NO dummy parameter - __cdecl uses stack, not registers
+typedef handle (__cdecl *CreateTextTag_t)();
+typedef void (__cdecl *SetTextTagText_t)(handle textTag, string text, float* height);
+typedef void (__cdecl *SetTextTagPos_t)(handle textTag, float* x, float* y, float* zOffset);
+typedef void (__cdecl *SetTextTagColor_t)(handle textTag, integer r, integer g, integer b, integer a);
+typedef void (__cdecl *SetTextTagVisibility_t)(handle textTag, bool visible);
+typedef void (__cdecl *SetTextTagSuspended_t)(handle textTag, bool suspended);
+typedef void (__cdecl *SetTextTagPermanent_t)(handle textTag, bool permanent);
+typedef void (__cdecl *SetTextTagLifespan_t)(handle textTag, float* lifespan);
+typedef void (__cdecl *SetTextTagFadepoint_t)(handle textTag, float* fadepoint);
 
 //=============================================================================
 // War3 1.24e (6387) 偏移量
@@ -185,49 +185,49 @@ void Jass_SetTextTagText(uint32_t textTag, CJassString* jassStr, float height) {
     if (g_SetTextTagText && textTag && jassStr) {
         // Pass CJassString pointer directly - War3 expects this structure
         string jassText = (string)jassStr;
-        g_SetTextTagText(textTag, nullptr, jassText, &height);
+        g_SetTextTagText(textTag, jassText, &height);
     }
 }
 
 void Jass_SetTextTagPos(uint32_t textTag, float x, float y, float zOffset) {
     if (g_SetTextTagPos && textTag) {
-        // JASS expects float pointers
-        g_SetTextTagPos(textTag, nullptr, &x, &y, &zOffset);
+        // JASS expects float pointers (__cdecl calling convention)
+        g_SetTextTagPos(textTag, &x, &y, &zOffset);
     }
 }
 
 void Jass_SetTextTagColor(uint32_t textTag, int r, int g, int b, int a) {
     if (g_SetTextTagColor && textTag) {
-        g_SetTextTagColor(textTag, nullptr, r, g, b, a);
+        g_SetTextTagColor(textTag, r, g, b, a);
     }
 }
 
 void Jass_SetTextTagVisibility(uint32_t textTag, bool visible) {
     if (g_SetTextTagVisibility && textTag) {
-        g_SetTextTagVisibility(textTag, nullptr, visible);
+        g_SetTextTagVisibility(textTag, visible);
     }
 }
 
 void Jass_SetTextTagSuspended(uint32_t textTag, bool suspended) {
     if (g_SetTextTagSuspended && textTag) {
-        g_SetTextTagSuspended(textTag, nullptr, suspended);
+        g_SetTextTagSuspended(textTag, suspended);
     }
 }
 
 void Jass_SetTextTagPermanent(uint32_t textTag, bool permanent) {
     if (g_SetTextTagPermanent && textTag) {
-        g_SetTextTagPermanent(textTag, nullptr, permanent);
+        g_SetTextTagPermanent(textTag, permanent);
     }
 }
 
 void Jass_SetTextTagLifespan(uint32_t textTag, float lifespan) {
     if (g_SetTextTagLifespan && textTag) {
-        g_SetTextTagLifespan(textTag, nullptr, &lifespan);
+        g_SetTextTagLifespan(textTag, &lifespan);
     }
 }
 
 void Jass_SetTextTagFadepoint(uint32_t textTag, float fadepoint) {
     if (g_SetTextTagFadepoint && textTag) {
-        g_SetTextTagFadepoint(textTag, nullptr, &fadepoint);
+        g_SetTextTagFadepoint(textTag, &fadepoint);
     }
 }
