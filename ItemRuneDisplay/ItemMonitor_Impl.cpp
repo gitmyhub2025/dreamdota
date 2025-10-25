@@ -22,20 +22,13 @@ static std::set<uint32_t> g_DisplayedItems;
 // 物品哈希表结构（从 DreamDota 提取）
 //=============================================================================
 
-struct ItemHashNode {
-    uint32_t key;           // 物品句柄
-    void* pItem;            // CItem*
-    ItemHashNode* next;     // 链表
-};
+// 实际上 War3 使用数组结构，不是哈希表！
+// 参考成功的 Python 实现
 
-struct ItemHashTable {
-    ItemHashNode** buckets; // 哈希桶数组
-    uint32_t capacity;      // 容量
-    uint32_t count;         // 物品数量
-};
-
-// War3 1.24e (6387) 物品哈希表偏移
-const DWORD OFFSET_ItemHashTable = 0x00AB4F84;
+// War3 1.24e (6387) 物品数组偏移（从 Python 代码验证）
+const DWORD OFFSET_GlobalClass = 0x00ACBDD8;  // GlobalClass
+const DWORD OFFSET_UnitClass    = 0x3BC;      // unitClass 偏移
+const DWORD OFFSET_UnitDataStart = 0x604;     // unitDataStart 偏移
 
 //=============================================================================
 // 物品枚举和处理
@@ -122,37 +115,51 @@ void ProcessItem(uint32_t itemHandle) {
 }
 
 void EnumerateAllItems() {
-    // DISABLED: Hash table enumeration causes crashes
-    // The hash table offset (0xAB4F84) cannot be confirmed from dreamdota source
-    //
-    // Alternative solutions:
-    // 1. Use the JASS script version (ItemRuneMonitor.j) which uses EnumItemsInRect
-    // 2. Wait for future implementation using JASS API callbacks
-    //
-    // For now, this function does nothing to prevent crashes
+    // Based on successful Python implementation
+    // War3 uses array structure, not hash table!
 
-    /* Original implementation - DISABLED
     DWORD gameBase = Jass_GetGameBase();
     if (!gameBase) return;
 
-    ItemHashTable** ppItemHashTable = (ItemHashTable**)(gameBase + OFFSET_ItemHashTable);
-    if (!ppItemHashTable || !*ppItemHashTable) {
-        return;
-    }
+    __try {
+        // Step 1: Get GlobalClass pointer
+        DWORD gcAddr = gameBase + OFFSET_GlobalClass;
+        DWORD gc = *(DWORD*)gcAddr;
+        if (gc == 0) return;
 
-    ItemHashTable* pHashTable = *ppItemHashTable;
-    if (!pHashTable->buckets || pHashTable->count == 0) {
-        return;
-    }
+        // Step 2: Get unitClass pointer
+        DWORD ucAddr = gc + OFFSET_UnitClass;
+        DWORD uc = *(DWORD*)ucAddr;
+        if (uc == 0) return;
 
-    for (uint32_t i = 0; i < pHashTable->capacity; i++) {
-        ItemHashNode* node = pHashTable->buckets[i];
-        while (node) {
-            ProcessItem(node->key);
-            node = node->next;
+        // Step 3: Add 0x10 offset
+        DWORD ua = uc + 0x10;
+
+        // Step 4: Read count and array pointer
+        DWORD countAddr = ua + OFFSET_UnitDataStart;
+        DWORD count = *(DWORD*)countAddr;
+        DWORD arrayAddr = ua + OFFSET_UnitDataStart + 4;
+        DWORD array = *(DWORD*)arrayAddr;
+
+        if (array == 0 || count == 0 || count > 10000) {
+            return;  // Safety check
+        }
+
+        // Step 5: Iterate through array
+        for (DWORD i = 0; i < count; i++) {
+            DWORD itemPtrAddr = array + 4 * i;
+            DWORD itemPtr = *(DWORD*)itemPtrAddr;
+
+            if (itemPtr == 0) continue;
+
+            // itemPtr is actually the handle we need!
+            // Process this item using JASS functions
+            ProcessItem(itemPtr);
         }
     }
-    */
+    __except(EXCEPTION_EXECUTE_HANDLER) {
+        // Ignore errors silently
+    }
 }
 
 //=============================================================================
