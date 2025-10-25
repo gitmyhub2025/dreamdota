@@ -129,31 +129,23 @@ void ProcessItemObject(DWORD objPtr) {
     Utils_OutputToScreen(message, 10.0f);
 
     // Create TextTag at item position to display item ID
-    // Based on DamageDisplay.cpp implementation
+    // Follow exact pattern from reference code
     uint32_t textTag = Jass_CreateTextTag();
     if (textTag != 0) {
-        // Get item ID string (no color codes - plain text)
+        // Get item ID string with color code (like reference code)
         std::string itemId = Utils_IntegerIdToString(data.typeId);
+        char textBuffer[64];
+        sprintf_s(textBuffer, sizeof(textBuffer), "|cffffcc00%s|r", itemId.c_str());
 
-        // Set text size (0.046 = Size_Middle from DamageDisplay)
-        float textSize = 0.046f;
-        Jass_SetTextTagText(textTag, itemId.c_str(), textSize);
-
-        // Set permanent to false (like DamageDisplay)
-        Jass_SetTextTagPermanent(textTag, false);
-
-        // Set color (yellow/gold: R=255, G=204, B=0, A=255)
-        // Color format: 0xAARRGGBB = 0xFFFFCC00
-        Jass_SetTextTagColor(textTag, 255, 204, 0, 255);
-
-        // Position at item location (z offset = 150.0f like DamageDisplay)
-        Jass_SetTextTagPos(textTag, data.x, data.y, 150.0f);
-
-        // Make it visible
+        // CRITICAL: Set visibility FIRST (like reference code)
         Jass_SetTextTagVisibility(textTag, true);
 
-        // Set lifespan (10 seconds)
-        Jass_SetTextTagLifespan(textTag, 10.0f);
+        // Then set text
+        float textSize = 0.046f;
+        Jass_SetTextTagText(textTag, textBuffer, textSize);
+
+        // Then set position
+        Jass_SetTextTagPos(textTag, data.x, data.y, 150.0f);
 
         // Store TextTag handle for later cleanup
         g_ItemTextTags[objPtr] = textTag;
