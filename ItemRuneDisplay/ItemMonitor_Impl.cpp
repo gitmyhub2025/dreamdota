@@ -129,25 +129,31 @@ void ProcessItemObject(DWORD objPtr) {
     Utils_OutputToScreen(message, 10.0f);
 
     // Create TextTag at item position to display item ID
+    // Based on DamageDisplay.cpp implementation
     uint32_t textTag = Jass_CreateTextTag();
     if (textTag != 0) {
-        // Get item ID string
+        // Get item ID string (no color codes - plain text)
         std::string itemId = Utils_IntegerIdToString(data.typeId);
 
-        // Set text with yellow color formatting
-        char textBuffer[64];
-        sprintf_s(textBuffer, sizeof(textBuffer), "|cffffcc00%s|r", itemId.c_str());
-        Jass_SetTextTagText(textTag, textBuffer, 0.024f);
+        // Set text size (0.046 = Size_Middle from DamageDisplay)
+        float textSize = 0.046f;
+        Jass_SetTextTagText(textTag, itemId.c_str(), textSize);
 
-        // Position at item location (z offset = 0 for ground items)
-        Jass_SetTextTagPos(textTag, data.x, data.y, 0.0f);
+        // Set permanent to false (like DamageDisplay)
+        Jass_SetTextTagPermanent(textTag, false);
 
         // Set color (yellow/gold: R=255, G=204, B=0, A=255)
+        // Color format: 0xAARRGGBB = 0xFFFFCC00
         Jass_SetTextTagColor(textTag, 255, 204, 0, 255);
 
-        // Make it visible and permanent
+        // Position at item location (z offset = 150.0f like DamageDisplay)
+        Jass_SetTextTagPos(textTag, data.x, data.y, 150.0f);
+
+        // Make it visible
         Jass_SetTextTagVisibility(textTag, true);
-        Jass_SetTextTagPermanent(textTag, true);
+
+        // Set lifespan (10 seconds)
+        Jass_SetTextTagLifespan(textTag, 10.0f);
 
         // Store TextTag handle for later cleanup
         g_ItemTextTags[objPtr] = textTag;
@@ -155,8 +161,8 @@ void ProcessItemObject(DWORD objPtr) {
         // Debug: Confirm TextTag creation
         char debugMsg[256];
         sprintf_s(debugMsg, sizeof(debugMsg),
-            "|cff00ff00[DEBUG] TextTag created: %u for item %s|r",
-            textTag, itemId.c_str());
+            "|cff00ff00[DEBUG] TextTag %u: %s at (%.0f,%.0f,+150)|r",
+            textTag, itemId.c_str(), data.x, data.y);
         Utils_OutputToScreen(debugMsg, 3.0f);
     } else {
         // Debug: TextTag creation failed

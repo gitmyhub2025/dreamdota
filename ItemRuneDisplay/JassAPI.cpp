@@ -30,6 +30,8 @@ typedef void (__fastcall *SetTextTagPos_t)(handle textTag, void* dummy, float* x
 typedef void (__fastcall *SetTextTagColor_t)(handle textTag, void* dummy, integer r, integer g, integer b, integer a);
 typedef void (__fastcall *SetTextTagVisibility_t)(handle textTag, void* dummy, bool visible);
 typedef void (__fastcall *SetTextTagPermanent_t)(handle textTag, void* dummy, bool permanent);
+typedef void (__fastcall *SetTextTagLifespan_t)(handle textTag, void* dummy, float* lifespan);
+typedef void (__fastcall *SetTextTagFadepoint_t)(handle textTag, void* dummy, float* fadepoint);
 
 //=============================================================================
 // War3 1.24e (6387) 偏移量
@@ -46,12 +48,14 @@ namespace Offsets {
     const DWORD GetWidgetLife  = 0x003C51A0;
 
     // TextTag offsets (from native_offsets_6387.inc)
-    const DWORD CreateTextTag       = 0x003BD0C0;
-    const DWORD SetTextTagText      = 0x003BD110;
-    const DWORD SetTextTagPos       = 0x003BD150;
-    const DWORD SetTextTagColor     = 0x003BD1E0;
+    const DWORD CreateTextTag        = 0x003BD0C0;
+    const DWORD SetTextTagText       = 0x003BD110;
+    const DWORD SetTextTagPos        = 0x003BD150;
+    const DWORD SetTextTagColor      = 0x003BD1E0;
     const DWORD SetTextTagVisibility = 0x003BD2A0;
-    const DWORD SetTextTagPermanent = 0x003BD300;
+    const DWORD SetTextTagPermanent  = 0x003BD300;
+    const DWORD SetTextTagLifespan   = 0x003BD360;
+    const DWORD SetTextTagFadepoint  = 0x003BD390;
 }
 
 //=============================================================================
@@ -77,6 +81,8 @@ static SetTextTagPos_t g_SetTextTagPos = nullptr;
 static SetTextTagColor_t g_SetTextTagColor = nullptr;
 static SetTextTagVisibility_t g_SetTextTagVisibility = nullptr;
 static SetTextTagPermanent_t g_SetTextTagPermanent = nullptr;
+static SetTextTagLifespan_t g_SetTextTagLifespan = nullptr;
+static SetTextTagFadepoint_t g_SetTextTagFadepoint = nullptr;
 
 //=============================================================================
 // 初始化
@@ -113,6 +119,8 @@ bool Jass_Initialize() {
     g_SetTextTagColor = (SetTextTagColor_t)(g_dwGameBase + Offsets::SetTextTagColor);
     g_SetTextTagVisibility = (SetTextTagVisibility_t)(g_dwGameBase + Offsets::SetTextTagVisibility);
     g_SetTextTagPermanent = (SetTextTagPermanent_t)(g_dwGameBase + Offsets::SetTextTagPermanent);
+    g_SetTextTagLifespan = (SetTextTagLifespan_t)(g_dwGameBase + Offsets::SetTextTagLifespan);
+    g_SetTextTagFadepoint = (SetTextTagFadepoint_t)(g_dwGameBase + Offsets::SetTextTagFadepoint);
 
     return true;
 }
@@ -191,5 +199,17 @@ void Jass_SetTextTagVisibility(uint32_t textTag, bool visible) {
 void Jass_SetTextTagPermanent(uint32_t textTag, bool permanent) {
     if (g_SetTextTagPermanent && textTag) {
         g_SetTextTagPermanent(textTag, nullptr, permanent);
+    }
+}
+
+void Jass_SetTextTagLifespan(uint32_t textTag, float lifespan) {
+    if (g_SetTextTagLifespan && textTag) {
+        g_SetTextTagLifespan(textTag, nullptr, &lifespan);
+    }
+}
+
+void Jass_SetTextTagFadepoint(uint32_t textTag, float fadepoint) {
+    if (g_SetTextTagFadepoint && textTag) {
+        g_SetTextTagFadepoint(textTag, nullptr, &fadepoint);
     }
 }
