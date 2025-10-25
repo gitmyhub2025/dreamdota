@@ -17,6 +17,14 @@ typedef bool (__fastcall *IsItemPowerup_t)(uint32_t item);
 typedef bool (__fastcall *IsItemOwned_t)(uint32_t item);
 typedef float (__fastcall *GetWidgetLife_t)(uint32_t widget);
 
+// TextTag function types
+typedef uint32_t (__fastcall *CreateTextTag_t)();
+typedef void (__fastcall *SetTextTagText_t)(uint32_t textTag, void* dummy, const char* text, float height);
+typedef void (__fastcall *SetTextTagPos_t)(uint32_t textTag, void* dummy, float x, float y, float zOffset);
+typedef void (__fastcall *SetTextTagColor_t)(uint32_t textTag, void* dummy, int r, int g, int b, int a);
+typedef void (__fastcall *SetTextTagVisibility_t)(uint32_t textTag, void* dummy, bool visible);
+typedef void (__fastcall *SetTextTagPermanent_t)(uint32_t textTag, void* dummy, bool permanent);
+
 //=============================================================================
 // War3 1.24e (6387) 偏移量
 // 从 DreamDota native_offsets_6387.inc 提取
@@ -30,6 +38,14 @@ namespace Offsets {
     const DWORD IsItemPowerup  = 0x003C5B10;
     const DWORD IsItemOwned    = 0x003C5AD0;
     const DWORD GetWidgetLife  = 0x003C51A0;
+
+    // TextTag offsets (from native_offsets_6387.inc)
+    const DWORD CreateTextTag       = 0x003BD0C0;
+    const DWORD SetTextTagText      = 0x003BD110;
+    const DWORD SetTextTagPos       = 0x003BD150;
+    const DWORD SetTextTagColor     = 0x003BD1E0;
+    const DWORD SetTextTagVisibility = 0x003BD2A0;
+    const DWORD SetTextTagPermanent = 0x003BD300;
 }
 
 //=============================================================================
@@ -47,6 +63,14 @@ static GetItemType_t g_GetItemType = nullptr;
 static IsItemPowerup_t g_IsItemPowerup = nullptr;
 static IsItemOwned_t g_IsItemOwned = nullptr;
 static GetWidgetLife_t g_GetWidgetLife = nullptr;
+
+// TextTag function pointers
+static CreateTextTag_t g_CreateTextTag = nullptr;
+static SetTextTagText_t g_SetTextTagText = nullptr;
+static SetTextTagPos_t g_SetTextTagPos = nullptr;
+static SetTextTagColor_t g_SetTextTagColor = nullptr;
+static SetTextTagVisibility_t g_SetTextTagVisibility = nullptr;
+static SetTextTagPermanent_t g_SetTextTagPermanent = nullptr;
 
 //=============================================================================
 // 初始化
@@ -75,6 +99,14 @@ bool Jass_Initialize() {
     g_IsItemPowerup = (IsItemPowerup_t)(g_dwGameBase + Offsets::IsItemPowerup);
     g_IsItemOwned = (IsItemOwned_t)(g_dwGameBase + Offsets::IsItemOwned);
     g_GetWidgetLife = (GetWidgetLife_t)(g_dwGameBase + Offsets::GetWidgetLife);
+
+    // Initialize TextTag function pointers
+    g_CreateTextTag = (CreateTextTag_t)(g_dwGameBase + Offsets::CreateTextTag);
+    g_SetTextTagText = (SetTextTagText_t)(g_dwGameBase + Offsets::SetTextTagText);
+    g_SetTextTagPos = (SetTextTagPos_t)(g_dwGameBase + Offsets::SetTextTagPos);
+    g_SetTextTagColor = (SetTextTagColor_t)(g_dwGameBase + Offsets::SetTextTagColor);
+    g_SetTextTagVisibility = (SetTextTagVisibility_t)(g_dwGameBase + Offsets::SetTextTagVisibility);
+    g_SetTextTagPermanent = (SetTextTagPermanent_t)(g_dwGameBase + Offsets::SetTextTagPermanent);
 
     return true;
 }
@@ -113,4 +145,42 @@ bool Jass_IsItemOwned(uint32_t item) {
 
 float Jass_GetWidgetLife(uint32_t widget) {
     return g_GetWidgetLife ? g_GetWidgetLife(widget) : 0.0f;
+}
+
+//=============================================================================
+// TextTag functions
+//=============================================================================
+
+uint32_t Jass_CreateTextTag() {
+    return g_CreateTextTag ? g_CreateTextTag() : 0;
+}
+
+void Jass_SetTextTagText(uint32_t textTag, const char* text, float height) {
+    if (g_SetTextTagText && textTag) {
+        g_SetTextTagText(textTag, nullptr, text, height);
+    }
+}
+
+void Jass_SetTextTagPos(uint32_t textTag, float x, float y, float zOffset) {
+    if (g_SetTextTagPos && textTag) {
+        g_SetTextTagPos(textTag, nullptr, x, y, zOffset);
+    }
+}
+
+void Jass_SetTextTagColor(uint32_t textTag, int r, int g, int b, int a) {
+    if (g_SetTextTagColor && textTag) {
+        g_SetTextTagColor(textTag, nullptr, r, g, b, a);
+    }
+}
+
+void Jass_SetTextTagVisibility(uint32_t textTag, bool visible) {
+    if (g_SetTextTagVisibility && textTag) {
+        g_SetTextTagVisibility(textTag, nullptr, visible);
+    }
+}
+
+void Jass_SetTextTagPermanent(uint32_t textTag, bool permanent) {
+    if (g_SetTextTagPermanent && textTag) {
+        g_SetTextTagPermanent(textTag, nullptr, permanent);
+    }
 }

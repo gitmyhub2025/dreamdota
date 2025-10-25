@@ -18,6 +18,9 @@ static HANDLE g_hTimerQueue = nullptr;
 static HANDLE g_hTimer = nullptr;
 static std::set<uint32_t> g_DisplayedItems;
 
+// Store TextTag handles for each item (objPtr -> textTag handle)
+static std::map<DWORD, uint32_t> g_ItemTextTags;
+
 //=============================================================================
 // 物品对象结构（从 Python 代码提取）
 //=============================================================================
@@ -124,6 +127,31 @@ void ProcessItemObject(DWORD objPtr) {
 
     Utils_OutputToScreen(message, 10.0f);
 
+    // Create TextTag at item position to display item ID
+    uint32_t textTag = Jass_CreateTextTag();
+    if (textTag != 0) {
+        // Get item ID string
+        std::string itemId = Utils_IntegerIdToString(data.typeId);
+
+        // Set text with yellow color formatting
+        char textBuffer[64];
+        sprintf_s(textBuffer, sizeof(textBuffer), "|cffffcc00%s|r", itemId.c_str());
+        Jass_SetTextTagText(textTag, textBuffer, 0.024f);
+
+        // Position at item location (z offset = 0 for ground items)
+        Jass_SetTextTagPos(textTag, data.x, data.y, 0.0f);
+
+        // Set color (yellow/gold: R=255, G=204, B=0, A=255)
+        Jass_SetTextTagColor(textTag, 255, 204, 0, 255);
+
+        // Make it visible and permanent
+        Jass_SetTextTagVisibility(textTag, true);
+        Jass_SetTextTagPermanent(textTag, true);
+
+        // Store TextTag handle for later cleanup
+        g_ItemTextTags[objPtr] = textTag;
+    }
+
     // Mark as displayed
     g_DisplayedItems.insert(objPtr);
 }
@@ -215,6 +243,7 @@ void ItemMonitor_Start() {
     g_bRunning = true;
     g_bInGame = true;  // 标记进入游戏
     g_DisplayedItems.clear();
+    g_ItemTextTags.clear();
 
     // Create timer queue
     g_hTimerQueue = CreateTimerQueue();
@@ -250,6 +279,9 @@ void ItemMonitor_Stop() {
         DeleteTimerQueue(g_hTimerQueue);
         g_hTimerQueue = nullptr;
     }
+
+    // Clean up all TextTags
+    g_ItemTextTags.clear();
 
     g_DisplayedItems.clear();
 

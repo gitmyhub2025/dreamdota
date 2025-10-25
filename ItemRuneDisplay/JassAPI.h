@@ -24,4 +24,12 @@ bool Jass_IsItemPowerup(uint32_t item);
 bool Jass_IsItemOwned(uint32_t item);
 float Jass_GetWidgetLife(uint32_t widget);
 
+// TextTag functions for displaying text at world positions
+uint32_t Jass_CreateTextTag();
+void Jass_SetTextTagText(uint32_t textTag, const char* text, float height);
+void Jass_SetTextTagPos(uint32_t textTag, float x, float y, float zOffset);
+void Jass_SetTextTagColor(uint32_t textTag, int r, int g, int b, int a);
+void Jass_SetTextTagVisibility(uint32_t textTag, bool visible);
+void Jass_SetTextTagPermanent(uint32_t textTag, bool permanent);
+
 #endif // JASS_API_H
