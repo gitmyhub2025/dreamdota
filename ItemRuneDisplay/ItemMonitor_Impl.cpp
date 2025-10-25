@@ -220,12 +220,42 @@ void EnumerateAllItems() {
 }
 
 //=============================================================================
+// Update TextTag positions
+//=============================================================================
+
+void UpdateTextTags() {
+    // Update positions for all tracked TextTags
+    for (auto& pair : g_ItemTextTags) {
+        DWORD objPtr = pair.first;
+        uint32_t textTag = pair.second;
+
+        if (!textTag) continue;
+
+        // Read current item position from memory
+        __try {
+            DWORD infoPtr = *(DWORD*)(objPtr + OBJ_INFO);
+            if (infoPtr == 0) continue;
+
+            float x = *(float*)(infoPtr + INFO_X);
+            float y = *(float*)(infoPtr + INFO_Y);
+
+            // Update TextTag position
+            Jass_SetTextTagPos(textTag, x, y, 100.0f);
+        }
+        __except(EXCEPTION_EXECUTE_HANDLER) {
+            // Ignore errors
+        }
+    }
+}
+
+//=============================================================================
 // 定时器回调
 //=============================================================================
 
 VOID CALLBACK TimerCallback(PVOID lpParam, BOOLEAN TimerOrWaitFired) {
     if (!g_bRunning) return;
     EnumerateAllItems();
+    UpdateTextTags();  // Update all TextTag positions every frame
 }
 
 //=============================================================================
