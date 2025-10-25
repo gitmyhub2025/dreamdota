@@ -170,9 +170,14 @@ uint32_t Jass_CreateTextTag() {
 }
 
 void Jass_SetTextTagText(uint32_t textTag, const char* text, float height) {
-    if (g_SetTextTagText && textTag) {
-        // JASS expects string as DWORD (pointer to const char* works)
-        string jassText = (string)text;
+    if (g_SetTextTagText && textTag && text) {
+        // Use static buffer to ensure string stays in memory
+        // War3 might read the string pointer later
+        static char textBuffer[256];
+        strncpy_s(textBuffer, sizeof(textBuffer), text, _TRUNCATE);
+
+        // Pass the buffer address as JASS string
+        string jassText = (string)textBuffer;
         g_SetTextTagText(textTag, nullptr, jassText, &height);
     }
 }

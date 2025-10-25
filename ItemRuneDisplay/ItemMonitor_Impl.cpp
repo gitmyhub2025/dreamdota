@@ -129,23 +129,24 @@ void ProcessItemObject(DWORD objPtr) {
     Utils_OutputToScreen(message, 10.0f);
 
     // Create TextTag at item position to display item ID
-    // Follow exact pattern from reference code
+    // Follow EXACT pattern from itemTracker reference code
     uint32_t textTag = Jass_CreateTextTag();
     if (textTag != 0) {
-        // Get item ID string with color code (like reference code)
+        // Get item ID string with color code
         std::string itemId = Utils_IntegerIdToString(data.typeId);
         char textBuffer[64];
         sprintf_s(textBuffer, sizeof(textBuffer), "|cffffcc00%s|r", itemId.c_str());
 
-        // CRITICAL: Set visibility FIRST (like reference code)
-        Jass_SetTextTagVisibility(textTag, true);
-
-        // Then set text
+        // CRITICAL: itemTracker order: Text -> Visibility -> Pos
+        // 1. Set text FIRST
         float textSize = 0.046f;
         Jass_SetTextTagText(textTag, textBuffer, textSize);
 
-        // Then set position
-        Jass_SetTextTagPos(textTag, data.x, data.y, 150.0f);
+        // 2. Then set visibility
+        Jass_SetTextTagVisibility(textTag, true);
+
+        // 3. Finally set position
+        Jass_SetTextTagPos(textTag, data.x, data.y, 10.0f);
 
         // Store TextTag handle for later cleanup
         g_ItemTextTags[objPtr] = textTag;
@@ -153,7 +154,7 @@ void ProcessItemObject(DWORD objPtr) {
         // Debug: Confirm TextTag creation
         char debugMsg[256];
         sprintf_s(debugMsg, sizeof(debugMsg),
-            "|cff00ff00[DEBUG] TextTag %u: %s at (%.0f,%.0f,+150)|r",
+            "|cff00ff00[DEBUG] TextTag %u: %s at (%.0f,%.0f,+10)|r",
             textTag, itemId.c_str(), data.x, data.y);
         Utils_OutputToScreen(debugMsg, 3.0f);
     } else {
