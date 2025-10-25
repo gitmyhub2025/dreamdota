@@ -7,6 +7,7 @@
 #include "JassAPI.h"
 #include "Utils.h"
 #include <set>
+#include <map>
 
 //=============================================================================
 // 全局变量
@@ -150,6 +151,16 @@ void ProcessItemObject(DWORD objPtr) {
 
         // Store TextTag handle for later cleanup
         g_ItemTextTags[objPtr] = textTag;
+
+        // Debug: Confirm TextTag creation
+        char debugMsg[256];
+        sprintf_s(debugMsg, sizeof(debugMsg),
+            "|cff00ff00[DEBUG] TextTag created: %u for item %s|r",
+            textTag, itemId.c_str());
+        Utils_OutputToScreen(debugMsg, 3.0f);
+    } else {
+        // Debug: TextTag creation failed
+        Utils_OutputToScreen("|cffff0000[DEBUG] TextTag creation failed!|r", 3.0f);
     }
 
     // Mark as displayed

@@ -17,13 +17,19 @@ typedef bool (__fastcall *IsItemPowerup_t)(uint32_t item);
 typedef bool (__fastcall *IsItemOwned_t)(uint32_t item);
 typedef float (__fastcall *GetWidgetLife_t)(uint32_t widget);
 
-// TextTag function types
-typedef uint32_t (__fastcall *CreateTextTag_t)();
-typedef void (__fastcall *SetTextTagText_t)(uint32_t textTag, void* dummy, const char* text, float height);
-typedef void (__fastcall *SetTextTagPos_t)(uint32_t textTag, void* dummy, float x, float y, float zOffset);
-typedef void (__fastcall *SetTextTagColor_t)(uint32_t textTag, void* dummy, int r, int g, int b, int a);
-typedef void (__fastcall *SetTextTagVisibility_t)(uint32_t textTag, void* dummy, bool visible);
-typedef void (__fastcall *SetTextTagPermanent_t)(uint32_t textTag, void* dummy, bool permanent);
+// JASS type definitions (from jass_types.h)
+typedef int integer;
+typedef DWORD handle;
+typedef DWORD string;
+
+// TextTag function types (from JassNatives.prototype.inc)
+// Note: JASS float parameters are passed as pointers!
+typedef handle (__fastcall *CreateTextTag_t)();
+typedef void (__fastcall *SetTextTagText_t)(handle textTag, void* dummy, string text, float* height);
+typedef void (__fastcall *SetTextTagPos_t)(handle textTag, void* dummy, float* x, float* y, float* zOffset);
+typedef void (__fastcall *SetTextTagColor_t)(handle textTag, void* dummy, integer r, integer g, integer b, integer a);
+typedef void (__fastcall *SetTextTagVisibility_t)(handle textTag, void* dummy, bool visible);
+typedef void (__fastcall *SetTextTagPermanent_t)(handle textTag, void* dummy, bool permanent);
 
 //=============================================================================
 // War3 1.24e (6387) 偏移量
@@ -157,13 +163,16 @@ uint32_t Jass_CreateTextTag() {
 
 void Jass_SetTextTagText(uint32_t textTag, const char* text, float height) {
     if (g_SetTextTagText && textTag) {
-        g_SetTextTagText(textTag, nullptr, text, height);
+        // JASS expects string as DWORD (pointer to const char* works)
+        string jassText = (string)text;
+        g_SetTextTagText(textTag, nullptr, jassText, &height);
     }
 }
 
 void Jass_SetTextTagPos(uint32_t textTag, float x, float y, float zOffset) {
     if (g_SetTextTagPos && textTag) {
-        g_SetTextTagPos(textTag, nullptr, x, y, zOffset);
+        // JASS expects float pointers
+        g_SetTextTagPos(textTag, nullptr, &x, &y, &zOffset);
     }
 }
 
