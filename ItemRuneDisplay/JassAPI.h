@@ -30,6 +30,7 @@ void Jass_SetTextTagText(uint32_t textTag, const char* text, float height);
 void Jass_SetTextTagPos(uint32_t textTag, float x, float y, float zOffset);
 void Jass_SetTextTagColor(uint32_t textTag, int r, int g, int b, int a);
 void Jass_SetTextTagVisibility(uint32_t textTag, bool visible);
+void Jass_SetTextTagSuspended(uint32_t textTag, bool suspended);
 void Jass_SetTextTagPermanent(uint32_t textTag, bool permanent);
 void Jass_SetTextTagLifespan(uint32_t textTag, float lifespan);
 void Jass_SetTextTagFadepoint(uint32_t textTag, float fadepoint);

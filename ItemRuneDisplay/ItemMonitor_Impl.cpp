@@ -145,7 +145,10 @@ void ProcessItemObject(DWORD objPtr) {
         // 2. Then set visibility
         Jass_SetTextTagVisibility(textTag, true);
 
-        // 3. Finally set position
+        // 3. CRITICAL: Unsuspend the TextTag (may be suspended by default!)
+        Jass_SetTextTagSuspended(textTag, false);
+
+        // 4. Finally set position
         Jass_SetTextTagPos(textTag, data.x, data.y, 10.0f);
 
         // Store TextTag handle for later cleanup

@@ -4,6 +4,14 @@
  */
 
 #include "JassAPI.h"
+#include <map>
+#include <string>
+
+//=============================================================================
+// String storage for TextTags
+// War3 may read string pointers asynchronously, so we must keep them alive
+//=============================================================================
+static std::map<uint32_t, std::string> g_TextTagStrings;
 
 //=============================================================================
 // JASS 函数指针类型
@@ -29,6 +37,7 @@ typedef void (__fastcall *SetTextTagText_t)(handle textTag, void* dummy, string 
 typedef void (__fastcall *SetTextTagPos_t)(handle textTag, void* dummy, float* x, float* y, float* zOffset);
 typedef void (__fastcall *SetTextTagColor_t)(handle textTag, void* dummy, integer r, integer g, integer b, integer a);
 typedef void (__fastcall *SetTextTagVisibility_t)(handle textTag, void* dummy, bool visible);
+typedef void (__fastcall *SetTextTagSuspended_t)(handle textTag, void* dummy, bool suspended);
 typedef void (__fastcall *SetTextTagPermanent_t)(handle textTag, void* dummy, bool permanent);
 typedef void (__fastcall *SetTextTagLifespan_t)(handle textTag, void* dummy, float* lifespan);
 typedef void (__fastcall *SetTextTagFadepoint_t)(handle textTag, void* dummy, float* fadepoint);
@@ -53,6 +62,7 @@ namespace Offsets {
     const DWORD SetTextTagPos        = 0x003BD150;
     const DWORD SetTextTagColor      = 0x003BD1E0;
     const DWORD SetTextTagVisibility = 0x003BD2A0;
+    const DWORD SetTextTagSuspended  = 0x003BD2D0;
     const DWORD SetTextTagPermanent  = 0x003BD300;
     const DWORD SetTextTagLifespan   = 0x003BD360;
     const DWORD SetTextTagFadepoint  = 0x003BD390;
@@ -80,6 +90,7 @@ static SetTextTagText_t g_SetTextTagText = nullptr;
 static SetTextTagPos_t g_SetTextTagPos = nullptr;
 static SetTextTagColor_t g_SetTextTagColor = nullptr;
 static SetTextTagVisibility_t g_SetTextTagVisibility = nullptr;
+static SetTextTagSuspended_t g_SetTextTagSuspended = nullptr;
 static SetTextTagPermanent_t g_SetTextTagPermanent = nullptr;
 static SetTextTagLifespan_t g_SetTextTagLifespan = nullptr;
 static SetTextTagFadepoint_t g_SetTextTagFadepoint = nullptr;
@@ -118,6 +129,7 @@ bool Jass_Initialize() {
     g_SetTextTagPos = (SetTextTagPos_t)(g_dwGameBase + Offsets::SetTextTagPos);
     g_SetTextTagColor = (SetTextTagColor_t)(g_dwGameBase + Offsets::SetTextTagColor);
     g_SetTextTagVisibility = (SetTextTagVisibility_t)(g_dwGameBase + Offsets::SetTextTagVisibility);
+    g_SetTextTagSuspended = (SetTextTagSuspended_t)(g_dwGameBase + Offsets::SetTextTagSuspended);
     g_SetTextTagPermanent = (SetTextTagPermanent_t)(g_dwGameBase + Offsets::SetTextTagPermanent);
     g_SetTextTagLifespan = (SetTextTagLifespan_t)(g_dwGameBase + Offsets::SetTextTagLifespan);
     g_SetTextTagFadepoint = (SetTextTagFadepoint_t)(g_dwGameBase + Offsets::SetTextTagFadepoint);
@@ -171,13 +183,12 @@ uint32_t Jass_CreateTextTag() {
 
 void Jass_SetTextTagText(uint32_t textTag, const char* text, float height) {
     if (g_SetTextTagText && textTag && text) {
-        // Use static buffer to ensure string stays in memory
-        // War3 might read the string pointer later
-        static char textBuffer[256];
-        strncpy_s(textBuffer, sizeof(textBuffer), text, _TRUNCATE);
+        // Store string persistently for this TextTag
+        // War3 reads the string pointer asynchronously
+        g_TextTagStrings[textTag] = text;
 
-        // Pass the buffer address as JASS string
-        string jassText = (string)textBuffer;
+        // Pass pointer to our persistent string storage
+        string jassText = (string)g_TextTagStrings[textTag].c_str();
         g_SetTextTagText(textTag, nullptr, jassText, &height);
     }
 }
@@ -198,6 +209,12 @@ void Jass_SetTextTagColor(uint32_t textTag, int r, int g, int b, int a) {
 void Jass_SetTextTagVisibility(uint32_t textTag, bool visible) {
     if (g_SetTextTagVisibility && textTag) {
         g_SetTextTagVisibility(textTag, nullptr, visible);
+    }
+}
+
+void Jass_SetTextTagSuspended(uint32_t textTag, bool suspended) {
+    if (g_SetTextTagSuspended && textTag) {
+        g_SetTextTagSuspended(textTag, nullptr, suspended);
     }
 }
 
