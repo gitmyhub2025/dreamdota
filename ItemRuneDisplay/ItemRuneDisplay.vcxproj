@@ -111,20 +111,7 @@
     <None Include="BUILD.md" />
     <None Include="build.bat" />
     <None Include="ItemRuneMonitor.j" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="ItemRuneDisplay_6387.cpp">
-      <FileType>Document</FileType>
-    </Text>
-    <Text Include="ItemRuneDisplay_Full.cpp">
-      <FileType>Document</FileType>
-    </Text>
-    <Text Include="ItemMonitor.cpp">
-      <FileType>Document</FileType>
-    </Text>
-    <Text Include="main.cpp">
-      <FileType>Document</FileType>
-    </Text>
+    <None Include="CONFIG.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

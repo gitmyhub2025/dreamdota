@@ -5,6 +5,7 @@
 #ifndef ITEM_CONFIG_H
 #define ITEM_CONFIG_H
 
+#include <windows.h>
 #include <string>
 #include <map>
 #include <set>
@@ -49,6 +50,9 @@ public:
     static void GetTextTagColor(int& r, int& g, int& b, int& a);
 
 private:
+    // UTF-8 到 GBK 编码转换（War3 需要 GBK 编码）
+    static std::string UTF8ToGBK(const char* utf8Str);
+
     static DebugMode s_debugMode;
     static std::map<std::string, std::string> s_itemNames;
     static std::set<std::string> s_filterList;

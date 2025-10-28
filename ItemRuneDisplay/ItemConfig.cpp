@@ -14,13 +14,49 @@ float ItemConfig::s_textTagSize = 0.024f;  // 调小字体大小
 int ItemConfig::s_textTagColor[4] = {255, 204, 0, 255};  // 默认金黄色 (RGBA)
 
 //=============================================================================
+// UTF-8 到 GBK 编码转换（War3 1.24e 使用 GBK 编码）
+//=============================================================================
+std::string ItemConfig::UTF8ToGBK(const char* utf8Str) {
+    if (!utf8Str || utf8Str[0] == '\0') {
+        return std::string();
+    }
+
+    // UTF-8 -> Unicode (Wide Char)
+    int wideLen = MultiByteToWideChar(CP_UTF8, 0, utf8Str, -1, nullptr, 0);
+    if (wideLen <= 0) {
+        return std::string(utf8Str);  // 转换失败，返回原字符串
+    }
+
+    wchar_t* wideBuf = new wchar_t[wideLen];
+    MultiByteToWideChar(CP_UTF8, 0, utf8Str, -1, wideBuf, wideLen);
+
+    // Unicode (Wide Char) -> GBK
+    int gbkLen = WideCharToMultiByte(CP_ACP, 0, wideBuf, -1, nullptr, 0, nullptr, nullptr);
+    if (gbkLen <= 0) {
+        delete[] wideBuf;
+        return std::string(utf8Str);  // 转换失败，返回原字符串
+    }
+
+    char* gbkBuf = new char[gbkLen];
+    WideCharToMultiByte(CP_ACP, 0, wideBuf, -1, gbkBuf, gbkLen, nullptr, nullptr);
+
+    std::string result(gbkBuf);
+    delete[] wideBuf;
+    delete[] gbkBuf;
+
+    return result;
+}
+
+//=============================================================================
 // 初始化配置
 //=============================================================================
 void ItemConfig::Initialize() {
+    // 注意：u8"中文" 是 UTF-8 编码，需要转换为 GBK 才能在 War3 中正确显示
+    // UTF8ToGBK 函数会自动处理转换
 
-    s_itemNames["Q20I"] = u8"速度之靴";
-    s_itemNames["V30I"] = u8"敏捷便携";
-    s_itemNames["B30I"] = u8"力量手套";
+    s_itemNames["Q20I"] = UTF8ToGBK(u8"速度之靴");
+    s_itemNames["V30I"] = UTF8ToGBK(u8"敏捷便携");
+    s_itemNames["B30I"] = UTF8ToGBK(u8"力量手套");
 
     // 初始化过滤列表（在FILTERED模式下，只显示这些物品）
     // 默认包含所有有中文名称的物品
