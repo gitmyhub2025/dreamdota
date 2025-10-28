@@ -284,6 +284,35 @@ void EnumerateAllItems() {
 // Update TextTag positions and cleanup dead items
 //=============================================================================
 
+// Helper function to check item status (no C++ objects, can use __try)
+// Returns: 0 = alive and updated, 1 = dead, 2 = error
+static int CheckAndUpdateItem(DWORD objPtr, uint32_t textTag, float* outX, float* outY) {
+    __try {
+        // Check if item is deleted or dead
+        DWORD flags = *(DWORD*)(objPtr + OBJ_FLAGS);
+        float hp = *(float*)(objPtr + OBJ_HP);
+
+        if ((flags & 1) != 0 || hp <= 0.0f) {
+            // Item is dead or deleted
+            return 1;
+        }
+
+        // Item is alive, read position
+        DWORD infoPtr = *(DWORD*)(objPtr + OBJ_INFO);
+        if (infoPtr == 0) {
+            return 1;
+        }
+
+        *outX = *(float*)(infoPtr + INFO_X);
+        *outY = *(float*)(infoPtr + INFO_Y);
+        return 0;  // Alive
+    }
+    __except(EXCEPTION_EXECUTE_HANDLER) {
+        // Error reading memory
+        return 2;
+    }
+}
+
 void UpdateTextTags() {
     // Update positions for all tracked TextTags and remove dead items
     std::vector<DWORD> deadItems;
@@ -297,37 +326,15 @@ void UpdateTextTags() {
             continue;
         }
 
-        bool itemDead = false;
+        // Check item status using helper function (with SEH protection)
+        float x = 0.0f, y = 0.0f;
+        int status = CheckAndUpdateItem(objPtr, textTag, &x, &y);
 
-        // Check if item still exists and update position
-        __try {
-            // Check if item is deleted or dead
-            DWORD flags = *(DWORD*)(objPtr + OBJ_FLAGS);
-            float hp = *(float*)(objPtr + OBJ_HP);
-
-            if ((flags & 1) != 0 || hp <= 0.0f) {
-                // Item is dead or deleted
-                itemDead = true;
-            } else {
-                // Item is alive, update position
-                DWORD infoPtr = *(DWORD*)(objPtr + OBJ_INFO);
-                if (infoPtr == 0) {
-                    itemDead = true;
-                } else {
-                    float x = *(float*)(infoPtr + INFO_X);
-                    float y = *(float*)(infoPtr + INFO_Y);
-
-                    // Update TextTag position
-                    Jass_SetTextTagPos(textTag, x, y, 10.0f);
-                }
-            }
-        }
-        __except(EXCEPTION_EXECUTE_HANDLER) {
-            // Error reading memory - assume item is dead
-            itemDead = true;
-        }
-
-        if (itemDead) {
+        if (status == 0) {
+            // Item is alive, update TextTag position
+            Jass_SetTextTagPos(textTag, x, y, 10.0f);
+        } else {
+            // Item is dead or error occurred
             deadItems.push_back(objPtr);
 
             // Hide the TextTag (War3 will clean it up eventually)
