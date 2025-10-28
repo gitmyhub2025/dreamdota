@@ -8,13 +8,24 @@
 
 #include <cstring>
 
-// Simple structure matching War3's expected string format
+// Complete structure matching War3's expected string format
+// Based on working reference code - includes vtable and internal fields
 struct CJassStringData {
+    unsigned int vtable;
+    unsigned int refCount;
+    unsigned int dwUnk1;
+    unsigned int pUnk2;
+    unsigned int pUnk3;
+    unsigned int pUnk4;
+    unsigned int pUnk5;
     char* data;
 };
 
 struct CJassString {
+    unsigned int vtable;
+    unsigned int dw0;
     CJassStringData* data;
+    unsigned int dw1;
 };
 
 // C++ wrapper for managing CJassString lifecycle
