@@ -108,6 +108,15 @@ static bool ReadItemObjectSafe(DWORD objPtr, ItemObjectData* pData) {
 void ProcessItemObject(DWORD objPtr) {
     // Check if already displayed
     if (g_DisplayedItems.count(objPtr)) {
+        // DEBUG: Show that this item was already displayed
+        static DWORD lastSkipped = 0;
+        if (lastSkipped != objPtr) {
+            char debugMsg[256];
+            sprintf_s(debugMsg, sizeof(debugMsg),
+                "|cffaaaaaa[DEBUG] Item 0x%08X already displayed, skipping|r", objPtr);
+            Utils_OutputToScreen(debugMsg, 1.0f);
+            lastSkipped = objPtr;
+        }
         return;
     }
 
@@ -123,6 +132,13 @@ void ProcessItemObject(DWORD objPtr) {
         g_DisplayedItems.insert(objPtr);
         return;
     }
+
+    // DEBUG: Show new item found
+    char debugMsg2[256];
+    sprintf_s(debugMsg2, sizeof(debugMsg2),
+        "|cff00ff00[DEBUG] NEW item found: 0x%08X, typeId=%s|r",
+        objPtr, Utils_IntegerIdToString(data.typeId).c_str());
+    Utils_OutputToScreen(debugMsg2, 2.0f);
 
     // Display powerup info
     char message[512];
@@ -202,7 +218,18 @@ void EnumerateAllItems() {
             return;  // Safety check
         }
 
+        // DEBUG: Show enumeration info
+        static bool showedCount = false;
+        if (!showedCount && count > 0) {
+            char debugMsg[256];
+            sprintf_s(debugMsg, sizeof(debugMsg),
+                "|cff00ffff[DEBUG] Enumerating %u items in array|r", count);
+            Utils_OutputToScreen(debugMsg, 3.0f);
+            showedCount = true;
+        }
+
         // Step 5: Iterate through array
+        int processedCount = 0;
         for (DWORD i = 0; i < count; i++) {
             DWORD itemPtrAddr = array + 4 * i;
             DWORD itemPtr = *(DWORD*)itemPtrAddr;
@@ -212,6 +239,17 @@ void EnumerateAllItems() {
             // itemPtr is the object pointer, not handle!
             // Process this item by reading memory directly
             ProcessItemObject(itemPtr);
+            processedCount++;
+        }
+
+        // DEBUG: Show how many items were processed
+        static int lastProcessed = -1;
+        if (processedCount != lastProcessed && processedCount > 0) {
+            char debugMsg[256];
+            sprintf_s(debugMsg, sizeof(debugMsg),
+                "|cff00ffff[DEBUG] Processed %d items this cycle|r", processedCount);
+            Utils_OutputToScreen(debugMsg, 2.0f);
+            lastProcessed = processedCount;
         }
     }
     __except(EXCEPTION_EXECUTE_HANDLER) {
