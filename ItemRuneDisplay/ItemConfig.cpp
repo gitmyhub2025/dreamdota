@@ -7,7 +7,7 @@
 //=============================================================================
 // 静态成员初始化
 //=============================================================================
-DebugMode ItemConfig::s_debugMode = DebugMode::ALL;  // 默认显示所有
+DebugMode ItemConfig::s_debugMode = DebugMode::ALL;  // 默认显示所有// 或 FILTERED, NONE
 std::map<std::string, std::string> ItemConfig::s_itemNames;
 std::set<std::string> ItemConfig::s_filterList;
 float ItemConfig::s_textTagSize = 0.024f;  // 调小字体大小
