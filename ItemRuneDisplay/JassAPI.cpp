@@ -33,7 +33,7 @@ typedef DWORD string;
 // TextTag function types - CRITICAL: Use __cdecl like 1.27 reference!
 // NO dummy parameter - __cdecl uses stack, not registers
 typedef handle (__cdecl *CreateTextTag_t)();
-typedef void (__cdecl *SetTextTagText_t)(handle textTag, string text, float* height);
+typedef void (__cdecl *SetTextTagText_t)(handle textTag, CJassString* text, float* height);
 typedef void (__cdecl *SetTextTagPos_t)(handle textTag, float* x, float* y, float* zOffset);
 typedef void (__cdecl *SetTextTagColor_t)(handle textTag, integer r, integer g, integer b, integer a);
 typedef void (__cdecl *SetTextTagVisibility_t)(handle textTag, bool visible);
@@ -183,9 +183,8 @@ uint32_t Jass_CreateTextTag() {
 
 void Jass_SetTextTagText(uint32_t textTag, CJassString* jassStr, float height) {
     if (g_SetTextTagText && textTag && jassStr) {
-        // Pass CJassString pointer directly - War3 expects this structure
-        string jassText = (string)jassStr;
-        g_SetTextTagText(textTag, jassText, &height);
+        // Pass CJassString pointer directly - War3 expects this structure, not a cast to DWORD
+        g_SetTextTagText(textTag, jassStr, &height);
     }
 }
 
