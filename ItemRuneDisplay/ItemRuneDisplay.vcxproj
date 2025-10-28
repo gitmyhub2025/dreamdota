@@ -89,12 +89,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="ItemConfig.cpp" />
     <ClCompile Include="ItemMonitor_Impl.cpp" />
     <ClCompile Include="JassAPI.cpp" />
     <ClCompile Include="JassString.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ItemConfig.h" />
     <ClInclude Include="ItemMonitor.h" />
     <ClInclude Include="JassAPI.h" />
     <ClInclude Include="JassString.h" />

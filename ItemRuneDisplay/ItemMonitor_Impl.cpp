@@ -6,9 +6,11 @@
 #include "ItemMonitor.h"
 #include "JassAPI.h"
 #include "Utils.h"
+#include "ItemConfig.h"
 #include <set>
 #include <map>
 #include <memory>
+#include <vector>
 
 //=============================================================================
 // 全局变量
@@ -108,14 +110,16 @@ static bool ReadItemObjectSafe(DWORD objPtr, ItemObjectData* pData) {
 void ProcessItemObject(DWORD objPtr) {
     // Check if already displayed
     if (g_DisplayedItems.count(objPtr)) {
-        // DEBUG: Show that this item was already displayed
-        static DWORD lastSkipped = 0;
-        if (lastSkipped != objPtr) {
-            char debugMsg[256];
-            sprintf_s(debugMsg, sizeof(debugMsg),
-                "|cffaaaaaa[DEBUG] Item 0x%08X already displayed, skipping|r", objPtr);
-            Utils_OutputToScreen(debugMsg, 1.0f);
-            lastSkipped = objPtr;
+        // DEBUG: Show that this item was already displayed (only in ALL mode)
+        if (ItemConfig::ShouldShowDebugInfo()) {
+            static DWORD lastSkipped = 0;
+            if (lastSkipped != objPtr) {
+                char debugMsg[256];
+                sprintf_s(debugMsg, sizeof(debugMsg),
+                    "|cffaaaaaa[DEBUG] Item 0x%08X already displayed, skipping|r", objPtr);
+                Utils_OutputToScreen(debugMsg, 1.0f);
+                lastSkipped = objPtr;
+            }
         }
         return;
     }
@@ -133,54 +137,69 @@ void ProcessItemObject(DWORD objPtr) {
         return;
     }
 
-    // DEBUG: Show new item found
-    char debugMsg2[256];
-    sprintf_s(debugMsg2, sizeof(debugMsg2),
-        "|cff00ff00[DEBUG] NEW item found: 0x%08X, typeId=%s|r",
-        objPtr, Utils_IntegerIdToString(data.typeId).c_str());
-    Utils_OutputToScreen(debugMsg2, 2.0f);
+    // Get item ID and display name (Chinese if available)
+    std::string itemId = Utils_IntegerIdToString(data.typeId);
+    std::string displayName = ItemConfig::GetItemDisplayName(itemId);
 
-    // Display powerup info
-    char message[512];
-    sprintf_s(message, sizeof(message),
-        "|cffffcc00[Powerup]|r %s @ (%.0f, %.0f)",
-        Utils_IntegerIdToString(data.typeId).c_str(), data.x, data.y);
+    // DEBUG: Show new item found (only in ALL mode)
+    if (ItemConfig::ShouldShowDebugInfo()) {
+        char debugMsg2[256];
+        sprintf_s(debugMsg2, sizeof(debugMsg2),
+            "|cff00ff00[DEBUG] NEW item found: 0x%08X, typeId=%s, name=%s|r",
+            objPtr, itemId.c_str(), displayName.c_str());
+        Utils_OutputToScreen(debugMsg2, 2.0f);
+    }
 
-    Utils_OutputToScreen(message, 10.0f);
+    // Display powerup info (based on mode)
+    if (ItemConfig::ShouldShowItemNotification(itemId)) {
+        char message[512];
+        sprintf_s(message, sizeof(message),
+            "|cffffcc00[Powerup]|r %s @ (%.0f, %.0f)",
+            displayName.c_str(), data.x, data.y);
+        Utils_OutputToScreen(message, 10.0f);
+    }
 
-    // Create TextTag at item position to display item ID
-    // Use JassString structure like working reference code
+    // Create TextTag at item position (ALWAYS, not affected by debug mode)
+    // Use display name (Chinese if available)
     uint32_t textTag = Jass_CreateTextTag();
     if (textTag != 0) {
-        // Get item ID string with color code
-        std::string itemId = Utils_IntegerIdToString(data.typeId);
-        char textBuffer[64];
-        sprintf_s(textBuffer, sizeof(textBuffer), "|cffffcc00%s|r", itemId.c_str());
+        // Get TextTag color from config
+        int r, g, b, a;
+        ItemConfig::GetTextTagColor(r, g, b, a);
+
+        // Format with color code
+        char textBuffer[256];
+        sprintf_s(textBuffer, sizeof(textBuffer), "|cff%02x%02x%02x%s|r",
+            r, g, b, displayName.c_str());
 
         // Create and store JassString (must stay alive with TextTag!)
         g_ItemJassStrings[objPtr] = std::make_unique<JassString>(textBuffer);
 
-        // Follow reference code order exactly
-        float textSize = 0.046f;
-        Jass_SetTextTagText(textTag, g_ItemJassStrings[objPtr]->GetJassStr(), textSize);
+        // Get TextTag size from config
+        float textSize = ItemConfig::GetTextTagSize();
 
+        // Set TextTag properties
+        Jass_SetTextTagText(textTag, g_ItemJassStrings[objPtr]->GetJassStr(), textSize);
         Jass_SetTextTagVisibility(textTag, true);
         Jass_SetTextTagSuspended(textTag, false);
-
         Jass_SetTextTagPos(textTag, data.x, data.y, 10.0f);
 
         // Store TextTag handle for later cleanup
         g_ItemTextTags[objPtr] = textTag;
 
-        // Debug: Confirm TextTag creation
-        char debugMsg[256];
-        sprintf_s(debugMsg, sizeof(debugMsg),
-            "|cff00ff00[DEBUG] TextTag %u: %s at (%.0f,%.0f,+10)|r",
-            textTag, itemId.c_str(), data.x, data.y);
-        Utils_OutputToScreen(debugMsg, 3.0f);
+        // Debug: Confirm TextTag creation (only in ALL mode)
+        if (ItemConfig::ShouldShowDebugInfo()) {
+            char debugMsg[256];
+            sprintf_s(debugMsg, sizeof(debugMsg),
+                "|cff00ff00[DEBUG] TextTag %u: %s at (%.0f,%.0f,+10)|r",
+                textTag, displayName.c_str(), data.x, data.y);
+            Utils_OutputToScreen(debugMsg, 3.0f);
+        }
     } else {
-        // Debug: TextTag creation failed
-        Utils_OutputToScreen("|cffff0000[DEBUG] TextTag creation failed!|r", 3.0f);
+        // Debug: TextTag creation failed (only in ALL mode)
+        if (ItemConfig::ShouldShowDebugInfo()) {
+            Utils_OutputToScreen("|cffff0000[DEBUG] TextTag creation failed!|r", 3.0f);
+        }
     }
 
     // Mark as displayed
@@ -218,14 +237,16 @@ void EnumerateAllItems() {
             return;  // Safety check
         }
 
-        // DEBUG: Show enumeration info
-        static bool showedCount = false;
-        if (!showedCount && count > 0) {
-            char debugMsg[256];
-            sprintf_s(debugMsg, sizeof(debugMsg),
-                "|cff00ffff[DEBUG] Enumerating %u items in array|r", count);
-            Utils_OutputToScreen(debugMsg, 3.0f);
-            showedCount = true;
+        // DEBUG: Show enumeration info (only in ALL mode)
+        if (ItemConfig::ShouldShowDebugInfo()) {
+            static bool showedCount = false;
+            if (!showedCount && count > 0) {
+                char debugMsg[256];
+                sprintf_s(debugMsg, sizeof(debugMsg),
+                    "|cff00ffff[DEBUG] Enumerating %u items in array|r", count);
+                Utils_OutputToScreen(debugMsg, 3.0f);
+                showedCount = true;
+            }
         }
 
         // Step 5: Iterate through array
@@ -242,14 +263,16 @@ void EnumerateAllItems() {
             processedCount++;
         }
 
-        // DEBUG: Show how many items were processed
-        static int lastProcessed = -1;
-        if (processedCount != lastProcessed && processedCount > 0) {
-            char debugMsg[256];
-            sprintf_s(debugMsg, sizeof(debugMsg),
-                "|cff00ffff[DEBUG] Processed %d items this cycle|r", processedCount);
-            Utils_OutputToScreen(debugMsg, 2.0f);
-            lastProcessed = processedCount;
+        // DEBUG: Show how many items were processed (only in ALL mode)
+        if (ItemConfig::ShouldShowDebugInfo()) {
+            static int lastProcessed = -1;
+            if (processedCount != lastProcessed && processedCount > 0) {
+                char debugMsg[256];
+                sprintf_s(debugMsg, sizeof(debugMsg),
+                    "|cff00ffff[DEBUG] Processed %d items this cycle|r", processedCount);
+                Utils_OutputToScreen(debugMsg, 2.0f);
+                lastProcessed = processedCount;
+            }
         }
     }
     __except(EXCEPTION_EXECUTE_HANDLER) {
@@ -258,31 +281,74 @@ void EnumerateAllItems() {
 }
 
 //=============================================================================
-// Update TextTag positions
+// Update TextTag positions and cleanup dead items
 //=============================================================================
 
 void UpdateTextTags() {
-    // Update positions for all tracked TextTags
+    // Update positions for all tracked TextTags and remove dead items
+    std::vector<DWORD> deadItems;
+
     for (auto& pair : g_ItemTextTags) {
         DWORD objPtr = pair.first;
         uint32_t textTag = pair.second;
 
-        if (!textTag) continue;
+        if (!textTag) {
+            deadItems.push_back(objPtr);
+            continue;
+        }
 
-        // Read current item position from memory
+        bool itemDead = false;
+
+        // Check if item still exists and update position
         __try {
-            DWORD infoPtr = *(DWORD*)(objPtr + OBJ_INFO);
-            if (infoPtr == 0) continue;
+            // Check if item is deleted or dead
+            DWORD flags = *(DWORD*)(objPtr + OBJ_FLAGS);
+            float hp = *(float*)(objPtr + OBJ_HP);
 
-            float x = *(float*)(infoPtr + INFO_X);
-            float y = *(float*)(infoPtr + INFO_Y);
+            if ((flags & 1) != 0 || hp <= 0.0f) {
+                // Item is dead or deleted
+                itemDead = true;
+            } else {
+                // Item is alive, update position
+                DWORD infoPtr = *(DWORD*)(objPtr + OBJ_INFO);
+                if (infoPtr == 0) {
+                    itemDead = true;
+                } else {
+                    float x = *(float*)(infoPtr + INFO_X);
+                    float y = *(float*)(infoPtr + INFO_Y);
 
-            // Update TextTag position
-            Jass_SetTextTagPos(textTag, x, y, 100.0f);
+                    // Update TextTag position
+                    Jass_SetTextTagPos(textTag, x, y, 10.0f);
+                }
+            }
         }
         __except(EXCEPTION_EXECUTE_HANDLER) {
-            // Ignore errors
+            // Error reading memory - assume item is dead
+            itemDead = true;
         }
+
+        if (itemDead) {
+            deadItems.push_back(objPtr);
+
+            // Hide the TextTag (War3 will clean it up eventually)
+            Jass_SetTextTagVisibility(textTag, false);
+
+            // DEBUG: Report cleanup
+            if (ItemConfig::ShouldShowDebugInfo()) {
+                char debugMsg[256];
+                sprintf_s(debugMsg, sizeof(debugMsg),
+                    "|cffff8800[DEBUG] Cleaning up TextTag %u for dead item 0x%08X|r",
+                    textTag, objPtr);
+                Utils_OutputToScreen(debugMsg, 2.0f);
+            }
+        }
+    }
+
+    // Remove dead items from tracking maps
+    for (DWORD objPtr : deadItems) {
+        g_ItemTextTags.erase(objPtr);
+        g_ItemJassStrings.erase(objPtr);
+        g_DisplayedItems.erase(objPtr);
     }
 }
 
@@ -301,6 +367,9 @@ VOID CALLBACK TimerCallback(PVOID lpParam, BOOLEAN TimerOrWaitFired) {
 //=============================================================================
 
 bool ItemMonitor_Initialize() {
+    // Initialize item configuration and name mappings
+    ItemConfig::Initialize();
+
     // 初始化 JASS API
     if (!Jass_Initialize()) {
         return false;
