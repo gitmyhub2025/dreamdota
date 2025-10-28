@@ -76,15 +76,20 @@ s_debugMode = DebugMode::NONE;
 ```cpp
 void ItemConfig::Initialize() {
     // 添加你的物品映射
-    s_itemNames["Q201"] = "速度之靴";
-    s_itemNames["afac"] = "治疗药膏";
-    s_itemNames["ratf"] = "力量手套";
-    s_itemNames["rag1"] = "敏捷便鞋";
+    // 注意：中文字符串前必须加 u8 前缀以确保 UTF-8 编码！
+    s_itemNames["Q201"] = u8"速度之靴";
+    s_itemNames["afac"] = u8"治疗药膏";
+    s_itemNames["ratf"] = u8"力量手套";
+    s_itemNames["rag1"] = u8"敏捷便鞋";
 
     // 添加更多...
-    s_itemNames["YOUR_ITEM_ID"] = "中文名称";
+    s_itemNames["YOUR_ITEM_ID"] = u8"中文名称";
 }
 ```
+
+**重要提示：**
+- ⚠️ 中文字符串前**必须**加 `u8` 前缀（如 `u8"中文"`）
+- 这确保字符串以 UTF-8 编码存储，否则可能显示乱码
 
 **查找物品ID的方法：**
 1. 在 `DebugMode::ALL` 模式下运行
@@ -147,11 +152,11 @@ DebugMode ItemConfig::s_debugMode = DebugMode::ALL;
 DebugMode ItemConfig::s_debugMode = DebugMode::FILTERED;
 
 void ItemConfig::Initialize() {
-    // 添加重要神符
-    s_itemNames["rej1"] = "活力球";
-    s_itemNames["rej2"] = "虚空宝石";
-    s_itemNames["rej5"] = "双倍伤害";
-    s_itemNames["rej6"] = "幻象";
+    // 添加重要神符（注意：中文字符串前必须加 u8 前缀）
+    s_itemNames["rej1"] = u8"活力球";
+    s_itemNames["rej2"] = u8"虚空宝石";
+    s_itemNames["rej5"] = u8"双倍伤害";
+    s_itemNames["rej6"] = u8"幻象";
 
     // 清空默认过滤列表
     s_filterList.clear();
@@ -185,7 +190,8 @@ int ItemConfig::s_textTagColor[4] = {255, 0, 0, 255};  // 红色
 要修改配置，只需编辑 **`ItemConfig.cpp`** 文件：
 
 1. **修改调试模式**：找到 `s_debugMode` 行
-2. **添加物品名称**：在 `Initialize()` 函数中添加 `s_itemNames["ID"] = "名称";`
+2. **添加物品名称**：在 `Initialize()` 函数中添加 `s_itemNames["ID"] = u8"名称";`
+   - ⚠️ **重要**：中文字符串前必须加 `u8` 前缀！
 3. **修改过滤列表**：在 `Initialize()` 函数中添加 `s_filterList.insert("ID");`
 4. **修改 TextTag 大小**：找到 `s_textTagSize` 行
 5. **修改 TextTag 颜色**：找到 `s_textTagColor` 行
@@ -199,8 +205,11 @@ int ItemConfig::s_textTagColor[4] = {255, 0, 0, 255};  // 红色
 **Q: TextTag 不显示？**
 A: 检查编译是否成功，War3 版本是否为 1.24e (6387)
 
+**Q: 中文名称显示乱码？**
+A: 确保中文字符串前加了 `u8` 前缀，如 `s_itemNames["ID"] = u8"中文名";`
+
 **Q: 中文名称不显示？**
-A: 确保在 `s_itemNames` 中添加了对应的物品ID映射
+A: 确保在 `s_itemNames` 中添加了对应的物品ID映射，并使用了 `u8` 前缀
 
 **Q: 想要更小/更大的文字？**
 A: 修改 `s_textTagSize`，范围建议 0.015 ~ 0.040

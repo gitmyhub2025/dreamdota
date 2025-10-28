@@ -18,31 +18,32 @@ int ItemConfig::s_textTagColor[4] = {255, 204, 0, 255};  // 默认金黄色 (RGB
 //=============================================================================
 void ItemConfig::Initialize() {
     // 初始化常见物品的中文名称映射
-    // 格式：{"英文ID", "中文名称"}
+    // 格式：{"英文ID", u8"中文名称"}
+    // 注意：中文字符串前必须加 u8 前缀以确保 UTF-8 编码
 
     // 示例：常见神符/物品
-    s_itemNames["I0HM"] = "虚无宝石";
-    s_itemNames["I0KK"] = "空白物品";
-    s_itemNames["afac"] = "治疗药膏";
-    s_itemNames["desc"] = "卷轴";
-    s_itemNames["mcou"] = "勇气徽章";
-    s_itemNames["ratf"] = "力量手套";
-    s_itemNames["rag1"] = "敏捷便鞋";
-    s_itemNames["rhe1"] = "智力斗篷";
-    s_itemNames["rst1"] = "铁木枝干";
-    s_itemNames["rej1"] = "活力球";
-    s_itemNames["rej2"] = "虚空宝石";
-    s_itemNames["rej3"] = "魔法恢复";
-    s_itemNames["rej4"] = "生命恢复";
-    s_itemNames["rej5"] = "双倍伤害";
-    s_itemNames["rej6"] = "幻象";
+    s_itemNames["I0HM"] = u8"虚无宝石";
+    s_itemNames["I0KK"] = u8"空白物品";
+    s_itemNames["afac"] = u8"治疗药膏";
+    s_itemNames["desc"] = u8"卷轴";
+    s_itemNames["mcou"] = u8"勇气徽章";
+    s_itemNames["ratf"] = u8"力量手套";
+    s_itemNames["rag1"] = u8"敏捷便鞋";
+    s_itemNames["rhe1"] = u8"智力斗篷";
+    s_itemNames["rst1"] = u8"铁木枝干";
+    s_itemNames["rej1"] = u8"活力球";
+    s_itemNames["rej2"] = u8"虚空宝石";
+    s_itemNames["rej3"] = u8"魔法恢复";
+    s_itemNames["rej4"] = u8"生命恢复";
+    s_itemNames["rej5"] = u8"双倍伤害";
+    s_itemNames["rej6"] = u8"幻象";
 
     // 添加更多物品映射...
     // 用户可以根据需要添加自己的物品ID映射
-    s_itemNames["Q201"] = "速度之靴";
-    s_itemNames["rst2"] = "铁意志之盔";
-    s_itemNames["rhe2"] = "贤者面罩";
-    s_itemNames["ratc"] = "秘银锤";
+    s_itemNames["Q201"] = u8"速度之靴";
+    s_itemNames["rst2"] = u8"铁意志之盔";
+    s_itemNames["rhe2"] = u8"贤者面罩";
+    s_itemNames["ratc"] = u8"秘银锤";
 
     // 初始化过滤列表（在FILTERED模式下，只显示这些物品）
     // 默认包含所有有中文名称的物品
